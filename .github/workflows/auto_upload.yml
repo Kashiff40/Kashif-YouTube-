@@ -1,0 +1,26 @@
+name: YouTube Sports Automation
+
+on:
+  schedule:
+    - cron: '0 12 * * *' # Rozana dopahar 12 baje khud chalega
+  workflow_dispatch: # Aap jab chahein button daba kar manually bhi chala sakte hain
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install yt_dlp moviepy google-api-python-client google-auth-oauthlib
+
+      - name: Run Bot Script
+        run: |
+          python bot.py
