@@ -1,13 +1,9 @@
 import os
 import pickle
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from moviepy import VideoFileClip, ColorClip, vfx
-
-SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 
 def create_fallback_video():
     print("Fallback video generate ki ja rahi hai...")
@@ -51,12 +47,10 @@ def upload_to_youtube():
     client_id = os.environ.get("YOUTUBE_CLIENT_ID")
     client_secret = os.environ.get("YOUTUBE_CLIENT_SECRET")
     
-    # Credentials check
     if not client_id or not client_secret:
         print("Error: YouTube Secrets missing hain!")
         return
 
-    # Temporary client_secret.json file generate karna authentication ke liye
     client_secret_content = f"""
     {{"installed": {{"client_id": "{client_id}", "project_id": "youtube-bot", "auth_uri": "https://accounts.google.com/o/oauth2/auth", "token_uri": "https://oauth2.googleapis.com/token", "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs", "client_secret": "{client_secret}", "redirect_uris": ["http://localhost"]}}}}
     """
@@ -72,11 +66,9 @@ def upload_to_youtube():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file('client_secret.json', SCOPES)
-            # Server environment ke liye token generate karne ka setup
-            creds = flow.run_local_server(port=0)
-        with open('token.pickle', 'wb') as token:
-            pickle.dump(creds, token)
+            print("Notice: GitHub Actions headless environment mein browser open nahi ho sakta.")
+            print("Khadsha: Pehle aapko apne local computer par token generate karke GitHub Secret mein dalna hoga.")
+            return
 
     youtube = build('youtube', 'v3', credentials=creds)
 
@@ -85,10 +77,10 @@ def upload_to_youtube():
             'title': 'Automated Sports Highlight',
             'description': 'Generated automatically via Python & GitHub Actions.',
             'tags': ['sports', 'cricket', 'shorts'],
-            'categoryId': '17' # Sports category ID
+            'categoryId': '17'
         },
         'status': {
-            'privacyStatus': 'public' # Aap 'private' ya 'unlisted' bhi rakh sakte hain
+            'privacyStatus': 'public'
         }
     }
 
