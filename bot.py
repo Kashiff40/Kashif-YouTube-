@@ -1,6 +1,6 @@
 import os
 from yt_dlp import YoutubeDL
-from moviepy.editor import VideoFileClip
+from moviepy import VideoFileClip, vfx
 
 def download_and_edit_video():
     print("Sports video search aur download ki ja rahi hai...")
@@ -17,8 +17,10 @@ def download_and_edit_video():
     
     print("Video editing aur anti-copyright processing...")
     clip = VideoFileClip("raw_video.mp4")
+    
     # Video ki speed halki si change karna taake copyright match na ho
-    modified_clip = clip.fx(vfx.speedx, 1.05)
+    modified_clip = clip.with_speed_fx(1.05)
+    
     modified_clip.write_videofile("final_video.mp4", codec="libx264", audio_codec="aac")
     print("Video upload ke liye tayar hai!")
 
