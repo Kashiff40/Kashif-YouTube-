@@ -2,8 +2,8 @@ name: YouTube Sports Automation
 
 on:
   schedule:
-    - cron: '0 12 * * *' # Rozana dopahar 12 baje khud chalega
-  workflow_dispatch: # Aap jab chahein button daba kar manually bhi chala sakte hain
+    - cron: '0 12 * * *'
+  workflow_dispatch:
 
 jobs:
   run-bot:
@@ -19,8 +19,12 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install yt_dlp moviepy google-api-python-client google-auth-oauthlib
+          pip install yt_dlp moviepy google-api-python-client google-auth-oauthlib google-auth-httplib2
 
       - name: Run Bot Script
+        env:
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
         run: |
           python bot.py
+          
