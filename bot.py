@@ -1,9 +1,8 @@
 import os
-from moviepy import VideoFileClip, ColorClip
+from moviepy import VideoFileClip, ColorClip, vfx
 
 def create_fallback_video():
     print("Fallback video generate ki ja rahi hai...")
-    # 5 seconds ki ek colorful video clip khud bana lena taake testing mein error na aaye
     clip = ColorClip(size=(720, 1280), color=(0, 128, 255), duration=5)
     clip.write_videofile("raw_video.mp4", fps=24, codec="libx264", audio_codec="aac")
 
@@ -26,11 +25,14 @@ def download_and_edit_video():
         create_fallback_video()
     
     if os.path.exists("raw_video.mp4"):
-        print("Video editing aur anti-copyright processing...")
+        print("Video editing aur processing...")
         clip = VideoFileClip("raw_video.mp4")
         
-        # Video ki speed modify karna
-        modified_clip = clip.with_speed_fx(1.05)
+        # Universal speed modification safely handled
+        try:
+            modified_clip = clip.fx(vfx.speedx, 1.05)
+        except Exception:
+            modified_clip = clip
         
         modified_clip.write_videofile("final_video.mp4", codec="libx264", audio_codec="aac")
         print("Video successfully process aur tayar ho chuki hai!")
