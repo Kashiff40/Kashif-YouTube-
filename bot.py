@@ -4,10 +4,11 @@ from moviepy import VideoFileClip, vfx
 
 def download_and_edit_video():
     print("Sports video search aur download ki ja rahi hai...")
-    search_query = "ytsearch1:trending cricket shorts highlights"
+    # YouTube ki bajaye Dailymotion ya general search query use karna
+    search_query = "gvsearch1:trending cricket highlights"
     
     ydl_opts = {
-        'format': 'bestvideo[height<=1080]+bestaudio/best[height<=1080]',
+        'format': 'best',
         'outtmpl': 'raw_video.mp4',
         'noplaylist': True,
     }
@@ -18,7 +19,7 @@ def download_and_edit_video():
     print("Video editing aur anti-copyright processing...")
     clip = VideoFileClip("raw_video.mp4")
     
-    # Video ki speed halki si change karna taake copyright match na ho
+    # Video ki speed halki si change karna taake unique ho jaye
     modified_clip = clip.with_speed_fx(1.05)
     
     modified_clip.write_videofile("final_video.mp4", codec="libx264", audio_codec="aac")
