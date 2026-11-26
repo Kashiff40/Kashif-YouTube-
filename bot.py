@@ -1,98 +1,77 @@
 import os
-import requests as http_requests
+import random
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from moviepy import VideoFileClip, vfx
 
-# YAHAN APNE SPORTS / WORKING VIDEO LINKS DALEIN (aik fail ho toh agla try hoga)
-VIDEO_URLS = [
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+SEARCH_QUERIES = [
+    "cricket highlights shorts",
+    "football goals shorts",
+    "sports moments shorts",
+    "best sports highlights",
 ]
 
 
-def download_with_requests(url: str, output_path: str) -> bool:
-    headers = {
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/124.0.0.0 Safari/537.36"
-        )
-    }
-    resp = http_requests.get(url, headers=headers, stream=True, timeout=60)
-    resp.raise_for_status()
-
-    content_type = resp.headers.get("Content-Type", "").lower()
-    if "text/html" in content_type:
-        return False
-
-    with open(output_path, "wb") as f:
-        for chunk in resp.iter_content(chunk_size=1024 * 256):
-            if chunk:
-                f.write(chunk)
-
-    return os.path.exists(output_path) and os.path.getsize(output_path) > 10000
-
-
 def download_and_edit_video():
+    from yt_dlp import YoutubeDL
+
     for file_name in ("raw_video.mp4", "final_video.mp4"):
         if os.path.exists(file_name):
             os.remove(file_name)
 
+    queries = SEARCH_QUERIES.copy()
+    random.shuffle(queries)
+
     downloaded = False
 
-    for url in VIDEO_URLS:
-        print(f"Video download ki koshish: {url}")
+    for query in queries:
+        search_target = f"ytsearch5:{query}"
+        print(f"Search aur download ki koshish: {search_target}")
 
-        # Pehle yt_dlp se try karna
+        ydl_opts = {
+            # 60 second se choti videos ko tarjeeh (Shorts ke liye behtar)
+            "match_filter": lambda info: None
+            if (info.get("duration") is None or info.get("duration") <= 90)
+            else "Video too long",
+            "format": "best[ext=mp4][height<=720]/best[ext=mp4]/best",
+            "outtmpl": "raw_video.mp4",
+            "noplaylist": True,
+            "quiet": True,
+            "no_warnings": True,
+            "nocheckcertificate": True,
+            "http_headers": {
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/124.0.0.0 Safari/537.36"
+                )
+            },
+        }
+
         try:
-            from yt_dlp import YoutubeDL
-
-            ydl_opts = {
-                "format": "best[ext=mp4]/best",
-                "outtmpl": "raw_video.mp4",
-                "noplaylist": True,
-                "quiet": True,
-                "nocheckcertificate": True,
-                "http_headers": {
-                    "User-Agent": (
-                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                        "AppleWebKit/537.36 (KHTML, like Gecko) "
-                        "Chrome/124.0.0.0 Safari/537.36"
-                    )
-                },
-            }
             with YoutubeDL(ydl_opts) as ydl:
-                ydl.download([url])
+                ydl.download([search_target])
 
-            if os.path.exists("raw_video.mp4") and os.path.getsize("raw_video.mp4") > 10000:
+            if os.path.exists("raw_video.mp4") and os.path.getsize("raw_video.mp4") > 50000:
                 downloaded = True
-                print("yt_dlp se video download ho gayi!")
+                print(f"Video download ho gayi! Query: {query}")
                 break
         except Exception as e:
-            print(f"yt_dlp error ({url}): {e}")
-
-        # Agar yt_dlp fail ho toh direct requests se try karna
-        try:
-            if download_with_requests(url, "raw_video.mp4"):
-                downloaded = True
-                print("Direct download se video mil gayi!")
-                break
-        except Exception as e:
-            print(f"Direct download error ({url}): {e}")
+            print(f"Query '{query}' mein error aayi: {e}")
+            if os.path.exists("raw_video.mp4"):
+                os.remove("raw_video.mp4")
 
     if not downloaded or not os.path.exists("raw_video.mp4"):
         raise RuntimeError(
-            "Koi bhi video download nahi ho saki. VIDEO_URLS mein valid/accessible video links dalein."
+            "Koi bhi sports video download nahi ho saki. Dobara run karke dekhein ya query badlein."
         )
 
     print("Video editing aur processing shuru...")
     clip = VideoFileClip("raw_video.mp4")
 
-    # Agar video 60 seconds se lambi ho toh pehle 55 seconds lein (Shorts/quick clip ke liye)
+    # Agar clip 55 seconds se lambi ho toh pehle 55 seconds cut karna
     if clip.duration and clip.duration > 55:
         clip = clip.subclipped(0, 55)
 
@@ -143,9 +122,9 @@ def upload_to_youtube():
 
     body = {
         "snippet": {
-            "title": "Automated Sports Highlight #Shorts",
-            "description": "Generated automatically via Python & GitHub Actions. #sports #highlights #shorts",
-            "tags": ["sports", "highlights", "shorts"],
+            "title": "Trending Sports Highlight #Shorts",
+            "description": "Automated sports highlight via Python & GitHub Actions. #sports #shorts #highlights",
+            "tags": ["sports", "cricket", "football", "shorts"],
             "categoryId": "17",
         },
         "status": {
