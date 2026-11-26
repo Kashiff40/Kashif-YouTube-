@@ -10,13 +10,18 @@ def create_fallback_video():
     print("Fallback video generate ki ja rahi hai...")
     clip = ColorClip(size=(720, 1280), color=(0, 128, 255), duration=5)
     clip.write_videofile("raw_video.mp4", fps=24, codec="libx264", audio_codec="aac")
+    return True
 
 
 def download_and_edit_video():
+    used_fallback = False
+
+    # YAHAN APNA VALID VIDEO URL DALEIN (jo yt_dlp se download ho sake)
+    video_url = "https://upload.wikimedia.org/wikipedia/commons/transcoded/c/c4/BBH_Mozart_Violin_Concerto_No_4_3rd_movement.ogg/BBH_Mozart_Violin_Concerto_No_4_3rd_movement.ogg.480p.vp9.webm"
+
     try:
         from yt_dlp import YoutubeDL
         print("Video download ki koshish ki ja rahi hai...")
-        video_url = "https://upload.wikimedia.org/wikipedia/commons/transcoded/c/c4/BBH_Mozart_Violin_Concerto_No_4_3rd_movement.ogg/BBH_Mozart_Violin_Concerto_No_4_3rd_movement.ogg.480p.vp9.webm"
 
         ydl_opts = {
             "format": "best",
@@ -29,6 +34,7 @@ def download_and_edit_video():
     except Exception as e:
         print(f"Download mein error aayi: {e}")
         create_fallback_video()
+        used_fallback = True
 
     if os.path.exists("raw_video.mp4"):
         print("Video editing aur processing...")
@@ -41,8 +47,10 @@ def download_and_edit_video():
 
         modified_clip.write_videofile("final_video.mp4", codec="libx264", audio_codec="aac")
         print("Video successfully process aur tayar ho chuki hai!")
+        return used_fallback
     else:
         print("Error: Video file tayar nahi ho saki.")
+        return True
 
 
 def upload_to_youtube():
@@ -103,6 +111,8 @@ def upload_to_youtube():
 
 
 if __name__ == "__main__":
-    download_and_edit_video()
-    if os.path.exists("final_video.mp4"):
+    is_fallback = download_and_edit_video()
+    if is_fallback:
+        print("Download fail hua tha, isliye blue fallback video YouTube par upload nahi ki ja rahi.")
+    elif os.path.exists("final_video.mp4"):
         upload_to_youtube()
